@@ -20,9 +20,88 @@ export const SOLIDS = {
     structure: "8 vertices · 12 edges · 6 square faces",
     blurb: "A cube has six congruent square faces. Every edge has the same length a."
   },
-  // Full SOLIDS object for pyramid, cone, cylinder, sphere + helper functions from the zip
+  pyramid: {
+    name: "Square pyramid",
+    dims: [
+      { key: "b", label: "Base", symbol: "b", min: 0.5, max: 5, step: 0.05, def: 3 },
+      { key: "h", label: "Height", symbol: "h", min: 0.5, max: 6, step: 0.05, def: 3.5 }
+    ],
+    props: d => { const p = pyramidProperties(d.b, d.h); return { volume: p.volume, surface: p.surfaceArea, lateral: p.lateralArea, slant: p.slantHeight }; },
+    formulas: ["Volume V = ⅓ · b² · h", "Slant height l = √(h² + (b/2)²)", "Lateral area = 2 · b · l", "Surface area = b² + 2bl"],
+    working: (d, f) => [`V = ⅓ × ${f(d.b)}² × ${f(d.h)}`, `l = √(${f(d.h)}² + ${f(d.b / 2)}²)`],
+    structure: "5 vertices · 8 edges · 5 faces (1 square, 4 triangles)",
+    blurb: "A square pyramid rises from a square base to a single apex. Its volume is exactly one third of the prism with the same base and height."
+  },
+  cone: {
+    name: "Cone",
+    dims: [
+      { key: "r", label: "Radius", symbol: "r", min: 0.3, max: 3, step: 0.05, def: 1.6 },
+      { key: "h", label: "Height", symbol: "h", min: 0.5, max: 6, step: 0.05, def: 3.5 }
+    ],
+    props: d => { const p = coneProperties(d.r, d.h); return { volume: p.volume, surface: p.totalArea, lateral: p.curvedArea, slant: p.slantHeight }; },
+    formulas: [`Volume V = ⅓ · ${PI} · r² · h`, "Slant height l = √(r² + h²)", `Curved area = ${PI} · r · l`, `Total area = ${PI}r(r + l)`],
+    working: (d, f) => [`V = ⅓ × ${PI} × ${f(d.r)}² × ${f(d.h)}`, `l = √(${f(d.r)}² + ${f(d.h)}²)`],
+    structure: "1 apex · 1 circular base · 1 curved surface",
+    blurb: "A cone tapers from a circular base to an apex. Its slant height l is the hypotenuse of the right triangle formed by r and h."
+  },
+  cylinder: {
+    name: "Cylinder",
+    dims: [
+      { key: "r", label: "Radius", symbol: "r", min: 0.3, max: 3, step: 0.05, def: 1.5 },
+      { key: "h", label: "Height", symbol: "h", min: 0.5, max: 6, step: 0.05, def: 3.2 }
+    ],
+    props: d => { const p = cylinderProperties(d.r, d.h); return { volume: p.volume, surface: p.totalArea, lateral: p.curvedArea, slant: null }; },
+    formulas: [`Volume V = ${PI} · r² · h`, `Curved area = 2${PI}rh`, `Total area = 2${PI}r(r + h)`],
+    working: (d, f) => [`V = ${PI} × ${f(d.r)}² × ${f(d.h)}`, `Curved = 2${PI} × ${f(d.r)} × ${f(d.h)}`],
+    structure: "2 circular faces · 1 curved surface",
+    blurb: "A cylinder is a circle swept along a straight axis. Unrolled, its curved surface is a rectangle 2πr wide and h tall."
+  },
+  sphere: {
+    name: "Sphere",
+    dims: [{ key: "r", label: "Radius", symbol: "r", min: 0.3, max: 3, step: 0.05, def: 2 }],
+    props: d => { const p = sphereProperties(d.r); return { volume: p.volume, surface: p.surfaceArea, lateral: null, slant: null }; },
+    formulas: [`Volume V = ⁴⁄₃ · ${PI} · r³`, `Surface area = 4${PI}r²`],
+    working: (d, f) => [`V = ⁴⁄₃ × ${PI} × ${f(d.r)}³`, `Surface = 4 × ${PI} × ${f(d.r)}²`],
+    structure: "1 curved surface · no edges or vertices",
+    blurb: "Every point on a sphere is the same distance r from its centre."
+  }
 };
 
 export const SOLID_ORDER = ["cube", "pyramid", "cone", "cylinder", "sphere"];
-export function defaultDims(type) { return Object.fromEntries(SOLIDS[type].dims.map(d => [d.key, d.def])); }
-export function clampDims(type, dims) { /* full implementation */ }
+
+export function defaultDims(type) {
+  return Object.fromEntries(SOLIDS[type].dims.map(d => [d.key, d.def]));
+}
+
+export function clampDims(type, dims) {
+  const out = {};
+  for (const d of SOLIDS[type].dims) {
+    const v = Number(dims?.[d.key]);
+    out[d.key] = Number.isFinite(v) ? Math.min(d.max, Math.max(d.min, v)) : d.def;
+  }
+  return out;
+}
+
+export function solidProperties(type, dims) {
+  const d = clampDims(type, dims);
+  return SOLIDS[type].props(d);
+}
+
+export function scaleDims(type, dims, factor) {
+  const clamped = clampDims(type, dims);
+  const scaled = {};
+  for (const d of SOLIDS[type].dims) {
+    scaled[d.key] = clamped[d.key] * factor;
+  }
+  return clampDims(type, scaled);
+}
+
+export function parseSolidCommand(text) {
+  const s = text.toLowerCase();
+  if (/cube/.test(s)) return { type: "cube" };
+  if (/pyramid/.test(s)) return { type: "pyramid" };
+  if (/cone/.test(s)) return { type: "cone" };
+  if (/cylinder/.test(s)) return { type: "cylinder" };
+  if (/sphere/.test(s)) return { type: "sphere" };
+  return null;
+}
