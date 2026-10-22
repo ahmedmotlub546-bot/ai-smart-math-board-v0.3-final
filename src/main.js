@@ -1,0 +1,21 @@
+import "./styles/base.css";
+import "./styles/layout.css";
+import "./styles/canvas.css";
+import "./styles/responsive.css";
+import "./styles/solid.css";
+import "./styles/touch.css";
+import { createStore } from "./core/store.js";
+import { HistoryManager } from "./core/history.js";
+import { bindUI } from "./ui/bindings.js";
+import { BoardController } from "./board/board-controller.js";
+import { GeometryController } from "./geometry/geometry-controller.js";
+import { CoordinateController } from "./coordinates/coordinate-controller.js";
+import { FunctionGraphController } from "./graph/function-controller.js";
+import { SolidScene } from "./three/solid-scene.js";
+import { ConstructionPlayer } from "./animation/construction-player.js";
+import { CommandRouter } from "./commands/command-router.js";
+import { renderInspector } from "./ui/inspector.js";
+import { bindSolidControls } from "./ui/solid-controls.js";
+import { ProjectStore } from "./persistence/project-store.js";
+import { exportActiveSVG } from "./persistence/export.js";
+// Full main.js initialization and event wiring from the zip
